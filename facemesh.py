@@ -18,6 +18,13 @@ while True:
             mpDraw.draw_landmarks(image,faceLms,mpFaceMesh.FACE_CONNECTIONS(),
                                   drawSpec,drawSpec)
 
+            for id,lm in enumerate(faceLms.landmark):
+                #print(lm)
+                ih,iw,ic=image.shape
+                x,y=int(lm.x*iw),int(lm.y*ih)
+                print(id,x,y)
+
+
 
 
 
