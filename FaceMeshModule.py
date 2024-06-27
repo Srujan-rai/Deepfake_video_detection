@@ -1,3 +1,4 @@
+
 import cv2
 import mediapipe as mp
 import time
@@ -20,7 +21,7 @@ class FacemeshDetector():
         results = self.faceMesh.process(self.imgRGB)
         if results.multi_face_landmarks:
             for faceLms in results.multi_face_landmarks:
-                self.mpDraw.draw_landmarks(image, faceLms, self.mpFaceMesh.FACE_CONNECTIONS(),
+                self.mpDraw.draw_landmarks(image, faceLms, self.mpFaceMesh.FACEMESH_CONTOURS,
                                       self.drawSpec, self.drawSpec)
 
                 for id, lm in enumerate(faceLms.landmark):
