@@ -1,18 +1,14 @@
 import cv2
 import os
 
-# Define the paths
 input_folder = 'video_2_image/output'
 output_folder = 'face_recognition/face_detected'
 
-# Create the output directory if it doesn't exist
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
-# Load the pre-trained Haar Cascade classifier for face detection
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-# Process each frame in the input folder
 for filename in os.listdir(input_folder):
     if filename.endswith('.jpg') or filename.endswith('.png'):
         img_path = os.path.join(input_folder, filename)
