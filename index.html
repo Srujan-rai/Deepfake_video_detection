@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deepfake Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+        }
+        .container {
+            width: 80%;
+            max-width: 600px;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Deepfake Detection</h2>
+        <input type="file" id="videoInput" accept="video/*">
+        <input type="file" id="imageInput" accept="image/*">
+        <button class="btn" id="uploadButton" disabled>Upload and Process</button>
+
+        <h3>Process Logs</h3>
+        <div class="log" id="log"></div>
+    </div>
+
+    <script>
+        const videoInput = document.getElementById('videoInput');
+        const imageInput = document.getElementById('imageInput');
+        const uploadButton = document.getElementById('uploadButton');
+        const logBox = document.getElementById('log');
+        let pollingInterval;
+
+        videoInput.addEventListener('change', enableButton);
+        imageInput.addEventListener('change', enableButton);
+
+        function enableButton() {
+            uploadButton.disabled = !(videoInput.files.length && imageInput.files.length);
+        }
+
+        uploadButton.addEventListener('click', async () => {
+            const formData = new FormData();
+            formData.append('video', videoInput.files[0]);
+            formData.append('image', imageInput.files[0]);
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+
+                logMessage("Files uploaded successfully. Starting processing...");
+
+                // Start polling for status updates
+                startPolling();
+
+            } catch (error) {
+                logMessage(`Error: ${error.message}`);
+            }
+        });
+
+        function startPolling() {
+            pollingInterval = setInterval(async () => {
+                const response = await fetch('http://127.0.0.1:5000/process_status');
+                const data = await response.json();
+                updateLog(data.status);
+            }, 2000); // Poll every 2 seconds
+        }
+
+        function updateLog(statusArray) {
+            logBox.innerHTML = ''; // Clear log
+            statusArray.forEach(message => {
+                const logEntry = document.createElement('div');
+                logEntry.textContent = message;
+                logBox.appendChild(logEntry);
+            });
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        function logMessage(message) {
+            const logEntry = document.createElement('div');
+            logEntry.textContent = message;
+            logBox.appendChild(logEntry);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
