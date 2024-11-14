@@ -46,11 +46,9 @@ def process_video(video_path):
 
         landmarks = extract_landmarks(frame)
 
-        # Similarity to the real image landmarks
         sim_to_real = calculate_similarity(landmarks, real_landmarks)
         similarities_to_real.append(sim_to_real if sim_to_real is not None else 0)
 
-        # Similarity to previous frame's landmarks
         if prev_landmarks is not None:
             sim_to_prev = calculate_similarity(landmarks, prev_landmarks)
             similarities_to_prev.append(sim_to_prev if sim_to_prev is not None else 0)
@@ -59,13 +57,11 @@ def process_video(video_path):
 
         prev_landmarks = landmarks  # Update previous landmarks
 
-        # Collect frame rate data
         frame_rate = cap.get(cv2.CAP_PROP_FPS)
         frame_rates.append(frame_rate)
 
     cap.release()
 
-    # Plot similarity scores after processing the video
     plt.figure(figsize=(10, 5))
     plt.plot(similarities_to_real, label="Similarity to Real Image", color="blue")
     plt.plot(similarities_to_prev, label="Similarity to Previous Frame", color="red")
@@ -75,9 +71,7 @@ def process_video(video_path):
     plt.legend()
     plt.show()
 
-    # Print average frame rate
     avg_frame_rate = np.mean(frame_rates)
     print(f"Average Frame Rate: {avg_frame_rate:.2f} fps")
 
-# Provide the path to your video file and real image file
-process_video("utils/real.mp4")
+process_video("COMBINED.mp4")
