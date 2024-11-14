@@ -91,4 +91,4 @@ def process_video(video_path):
     print(f"Average Frame Rate: {avg_frame_rate:.2f} fps")
 
 # Provide the path to your video file and real image file
-process_video("utils/real.mp4")
+process_video("utils/COMBINED.mp4")
