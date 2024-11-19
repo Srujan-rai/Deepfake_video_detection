@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deepfake Video Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Deepfake Video Detection</h1>
+        <form id="upload-form" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="real-image">Upload Real Image:</label>
+                <input type="file" id="real-image" name="real_image" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label for="video-file">Upload Video:</label>
+                <input type="file" id="video-file" name="video_file" accept="video/*" required>
+            </div>
+            <button type="submit">Analyze</button>
+        </form>
+        <div id="output" style="display: none;">
+            <h2>Analysis Results:</h2>
+            <canvas id="result-chart"></canvas>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

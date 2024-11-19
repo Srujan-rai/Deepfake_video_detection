@@ -66,6 +66,9 @@ def process_video(video_path):
         frame_rates.append(frame_rate)
 
     cap.release()
+    print("Similarities to Real:", similarities_to_real)
+    print("Similarities to Previous:", similarities_to_prev)
+
 
     plt.figure(figsize=(10, 5))
     plt.plot(similarities_to_real, label="Similarity to Real Image", color="blue")
@@ -78,5 +81,7 @@ def process_video(video_path):
 
     avg_frame_rate = np.mean(frame_rates)
     print(f"Average Frame Rate: {avg_frame_rate:.2f} fps")
+    #plt.savefig("output_plot.png")
+
 
 process_video("utils/COMBINED.mp4")
