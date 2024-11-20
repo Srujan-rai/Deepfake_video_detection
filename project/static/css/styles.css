@@ -7,45 +7,46 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    flex-direction: column;
 }
 
 .container {
     background: #fff;
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     width: 90%;
-    max-width: 800px;
-    text-align: center;
+    max-width: 600px;
 }
 
 h1 {
-    margin-bottom: 20px;
+    text-align: center;
+    color: #333;
 }
 
 .form-group {
     margin-bottom: 15px;
-    text-align: left;
 }
 
 label {
     display: block;
     margin-bottom: 5px;
-    font-weight: bold;
+    color: #555;
 }
 
-input {
+input[type="file"] {
+    display: block;
     width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
 }
 
 button {
+    display: block;
+    width: 100%;
+    padding: 10px;
     background-color: #007bff;
-    color: #fff;
     border: none;
-    padding: 10px 20px;
+    color: #fff;
+    font-size: 16px;
     border-radius: 4px;
     cursor: pointer;
 }
@@ -54,11 +55,13 @@ button:hover {
     background-color: #0056b3;
 }
 
-#output {
+#loading {
+    text-align: center;
     margin-top: 20px;
+    font-size: 18px;
+    color: #555;
 }
 
-canvas {
-    width: 100%;
-    height: auto;
+#output {
+    margin-top: 20px;
 }

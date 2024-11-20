@@ -13,6 +13,9 @@ document.getElementById("upload-form").addEventListener("submit", async (e) => {
     formData.append("real_image", realImageInput.files[0]);
     formData.append("video_file", videoInput.files[0]);
 
+    document.getElementById("loading").style.display = "block";
+    document.getElementById("output").style.display = "none";
+
     try {
         const response = await fetch("/upload", {
             method: "POST",
@@ -25,8 +28,11 @@ document.getElementById("upload-form").addEventListener("submit", async (e) => {
 
         const data = await response.json();
         renderChart(data.similarities_to_real, data.similarities_to_prev);
+        displayProcessedVideo(data.processed_video_url);
     } catch (error) {
         alert(error.message);
+    } finally {
+        document.getElementById("loading").style.display = "none";
     }
 });
 
@@ -61,4 +67,9 @@ function renderChart(similaritiesToReal, similaritiesToPrev) {
             },
         },
     });
+}
+
+function displayProcessedVideo(videoUrl) {
+    const videoElement = document.getElementById("processed-video");
+    videoElement.src = videoUrl;
 }
