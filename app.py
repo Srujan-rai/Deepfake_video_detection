@@ -1,77 +1,163 @@
-from flask import Flask, request, jsonify
-import cv2
+from flask import Flask, render_template, request, jsonify, send_file
+from flask_cors import CORS
 import os
-import threading
+import cv2
+import mediapipe as mp
+import numpy as np
 
 app = Flask(__name__)
-UPLOAD_FOLDER = 'uploads'
-PROCESSED_FOLDER = 'processed_faces'
+CORS(app)
 
-# Ensure folders exist
+UPLOAD_FOLDER = "static/uploads"
+PROCESSED_FOLDER = "static/processed"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
 
-# Shared variable for process status
-process_status = []
+mp_face_mesh = mp.solutions.face_mesh
+face_mesh = mp_face_mesh.FaceMesh(
+    static_image_mode=False,
+    max_num_faces=1,
+    refine_landmarks=True,
+    min_detection_confidence=0.7,
+    min_tracking_confidence=0.7
+)
 
-@app.route('/upload', methods=['POST'])
-def upload_files():
-    global process_status
-    process_status = []  # Reset process log
-    
-    if 'video' not in request.files or 'image' not in request.files:
-        return jsonify({'error': 'Video and image files are required'}), 400
-    
-    video_file = request.files['video']
-    image_file = request.files['image']
-    
-    video_path = os.path.join(UPLOAD_FOLDER, video_file.filename)
-    image_path = os.path.join(UPLOAD_FOLDER, image_file.filename)
-    
-    video_file.save(video_path)
-    image_file.save(image_path)
-    
-    # Start processing in a separate thread
-    threading.Thread(target=process_video, args=(video_path,)).start()
-    
-    return jsonify({'message': 'Files uploaded successfully'}), 200
+def extract_landmarks(image):
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    results = face_mesh.process(image_rgb)
+    if results.multi_face_landmarks:
+        landmarks = [(lm.x, lm.y) for lm in results.multi_face_landmarks[0].landmark]
+        return np.array(landmarks), results.multi_face_landmarks[0]
+    return None, None
 
-def process_video(video_path):
-    global process_status
-    process_status.append("Video processing started.")
-    
-    # Load video
+def calculate_similarity(landmarks1, landmarks2):
+    if landmarks1 is None or landmarks2 is None:
+        return None
+    distances = np.linalg.norm(landmarks1 - landmarks2, axis=1)
+    return np.mean(distances)
+
+def process_video(video_path, real_landmarks):
+    import time  
+
     cap = cv2.VideoCapture(video_path)
-    frame_count = 0
-    face_count = 0
-    
+    if not cap.isOpened():
+        raise FileNotFoundError(f"Unable to open video file: {video_path}")
+
+    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    # Verify valid video properties
+    if frame_width <= 0 or frame_height <= 0 or fps <= 0:
+        raise ValueError("Invalid video properties. Ensure the input video is valid.")
+
+    # Output video setup
+    output_path = os.path.join("processed", "processed_video.mp4")
+    os.makedirs("processed", exist_ok=True)
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_path, fourcc, fps, (frame_width, frame_height))
+
+    similarities_to_real = []
+    similarities_to_prev = []
+    prev_landmarks = None
+
+    # Debugging variables
+    start_time = time.time()
+    frame_idx = 0
+
+    # Processing loop
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
-        
-        frame_count += 1
-        process_status.append(f"Processing frame {frame_count}")
-        
-        # Convert to grayscale for face detection
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        faces = face_cascade.detectMultiScale(gray, 1.1, 4)
-        
-        if len(faces) > 0:
-            for (x, y, w, h) in faces:
-                face_img = frame[y:y+h, x:x+w]
-                face_count += 1
-                face_path = os.path.join(PROCESSED_FOLDER, f"face_{frame_count}_{face_count}.jpg")
-                cv2.imwrite(face_path, face_img)
-                process_status.append(f"Face detected in frame {frame_count}. Saved face_{frame_count}_{face_count}.jpg")
-    
+
+        # Debug: Display progress
+        frame_idx += 1
+        print(f"Processing frame {frame_idx}/{frame_count}...")
+
+        # Extract landmarks
+        landmarks, face_mesh_landmarks = extract_landmarks(frame)
+
+        # Draw face mesh (debugging visualization)
+        if face_mesh_landmarks:
+            for landmark in face_mesh_landmarks.landmark:
+                x, y = int(landmark.x * frame.shape[1]), int(landmark.y * frame.shape[0])
+                cv2.circle(frame, (x, y), 1, (0, 255, 0), -1)
+
+        # Debug: Verify processed frame integrity
+        cv2.imshow("Processed Frame", frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):  # Press 'q' to exit during debugging
+            break
+
+        # Write frame to the output video
+        out.write(frame)
+
+        # Calculate similarity
+        sim_to_real = calculate_similarity(landmarks, real_landmarks)
+        similarities_to_real.append(sim_to_real if sim_to_real is not None else 0)
+
+        if prev_landmarks is not None:
+            sim_to_prev = calculate_similarity(landmarks, prev_landmarks)
+            similarities_to_prev.append(sim_to_prev if sim_to_prev is not None else 0)
+        else:
+            similarities_to_prev.append(0)
+
+        prev_landmarks = landmarks
+
+    # Clean up
     cap.release()
-    process_status.append("Video processing completed.")
+    out.release()
+    cv2.destroyAllWindows()
 
-@app.route('/process_status', methods=['GET'])
-def get_process_status():
-    return jsonify({"status": process_status})
+    # Debug: Measure processing time
+    total_time = time.time() - start_time
+    print(f"Processed {frame_idx} frames in {total_time:.2f} seconds.")
 
-if __name__ == '__main__':
-    app.run(debug=True)
+    # Verify output file
+    if not os.path.exists(output_path):
+        raise FileNotFoundError(f"Processed video was not saved correctly at: {output_path}")
+
+    print(f"Processed video saved at: {output_path}")
+
+    return similarities_to_real, similarities_to_prev, output_path
+
+
+# Route for the main page
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+# Route to handle file uploads and processing
+@app.route("/upload", methods=["POST"])
+def upload():
+    real_image = request.files.get("real_image")
+    video_file = request.files.get("video_file")
+
+    if not real_image or not video_file:
+        return jsonify({"error": "Both files are required"}), 400
+
+    # Save uploaded files
+    real_image_path = os.path.join(UPLOAD_FOLDER, "real_image.png")
+    video_file_path = os.path.join(UPLOAD_FOLDER, "uploaded_video.mp4")
+    real_image.save(real_image_path)
+    video_file.save(video_file_path)
+
+    # Load and process real image
+    real_image = cv2.imread(real_image_path)
+    real_landmarks, _ = extract_landmarks(real_image)
+    if real_landmarks is None:
+        return jsonify({"error": "No face detected in the real image"}), 400
+
+    # Process the video
+    similarities_to_real, similarities_to_prev, processed_video_path = process_video(video_file_path, real_landmarks)
+
+    # Return results as JSON
+    return jsonify({
+        "similarities_to_real": similarities_to_real,
+        "similarities_to_prev": similarities_to_prev,
+        "processed_video_url": processed_video_path
+    })
+
+if __name__ == "__main__":
+    app.run(debug=False)

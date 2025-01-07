@@ -1,0 +1,154 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f6fb;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+}
+
+.container {
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 900px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.container:hover {
+    transform: scale(1.02);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #333;
+    font-size: 2rem;
+    margin-bottom: 30px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+label {
+    display: block;
+    margin-bottom: 10px;
+    color: #444;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+.file-upload-area {
+    background-color: #f1f5f9;
+    border: 2px dashed #007bff;
+    padding: 50px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.file-upload-area:hover {
+    background-color: #e1e9f5;
+    transform: scale(1.05);
+}
+
+.file-upload-area.dragover {
+    background-color: #e1e9f5;
+    border-color: #0056b3;
+}
+
+.file-upload-area p {
+    font-size: 18px;
+    color: #007bff;
+    margin-top: 10px;
+}
+
+.custom-file-upload {
+    background-color: #007bff;
+    padding: 15px 40px;
+    border-radius: 10px;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.custom-file-upload:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+button {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background-color: #28a745;
+    border: none;
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+button:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+}
+
+#loading {
+    display: none;
+    font-size: 18px;
+    color: #555;
+    margin-top: 20px;
+    font-weight: 600;
+}
+
+#output {
+    display: none;
+    background-color: #e9f7ec;
+    color: #333;
+    font-size: 16px;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+input[type="file"]:focus {
+    animation: pulse 1s infinite;
+}
